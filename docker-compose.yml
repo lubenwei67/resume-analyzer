@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DEBUG=True
+      - FLASK_APP=app.py
+      - REDIS_ENABLED=True
+      - REDIS_HOST=redis
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    depends_on:
+      - redis
+    command: python app.py
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+
+volumes:
+  uploads:
+  redis_data:

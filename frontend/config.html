@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 赋能的智能简历分析系统 - 配置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .config-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #999;
+            margin-top: 6px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .preset {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .preset-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .note {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #0c5aa0;
+        }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <h1>🔧 配置后端服务</h1>
+        <p class="subtitle">设置后端 API 服务地址</p>
+        
+        <form onsubmit="saveConfig(event)">
+            <div class="form-group">
+                <label for="apiUrl">后端 API 地址</label>
+                <input 
+                    type="url" 
+                    id="apiUrl" 
+                    placeholder="http://localhost:5000/api"
+                    required
+                >
+                <div class="help-text">输入后端服务的 API 基础地址</div>
+            </div>
+            
+            <button type="submit">保存配置</button>
+            
+            <div class="preset">
+                <button type="button" class="preset-btn" onclick="setPreset('http://localhost:5000/api')">
+                    🏠 本地开发
+                </button>
+                <button type="button" class="preset-btn" onclick="setPreset('https://your-api.com/api')">
+                    ☁️ 云服务
+                </button>
+            </div>
+        </form>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="note">
+            💡 <strong>提示:</strong> 请确保后端服务已启动，且已启用 CORS。配置保存后，点击按钮进入应用。
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button id="continueBtn" style="display: none;" onclick="goToApp()">
+                ✓ 进入应用
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时读取保存的配置
+        window.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('apiUrl');
+            if (saved) {
+                document.getElementById('apiUrl').value = saved;
+            }
+        });
+
+        function setPreset(url) {
+            document.getElementById('apiUrl').value = url;
+        }
+
+        async function saveConfig(e) {
+            e.preventDefault();
+            
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const status = document.getElementById('status');
+            
+            // 验证 URL 格式
+            try {
+                new URL(apiUrl);
+            } catch {
+                status.textContent = '❌ 请输入有效的 URL';
+                status.classList.add('error');
+                status.classList.remove('success');
+                return;
+            }
+            
+            // 测试连接
+            status.textContent = '🔌 测试连接中...';
+            status.classList.remove('success', 'error');
+            status.style.display = 'block';
+            
+            try {
+                const healthUrl = apiUrl.replace('/api', '') + '/health';
+                const response = await fetch(healthUrl, { timeout: 5000 });
+                
+                if (response.ok) {
+                    // 保存到 localStorage
+                    localStorage.setItem('apiUrl', apiUrl);
+                    localStorage.setItem('apiConfigured', 'true');
+                    
+                    status.textContent = '✓ 配置成功！连接已验证';
+                    status.classList.add('success');
+                    status.classList.remove('error');
+                    
+                    // 显示继续按钮
+                    document.getElementById('continueBtn').style.display = 'block';
+                } else {
+                    throw new Error('服务器返回错误');
+                }
+            } catch (error) {
+                status.textContent = `❌ 连接失败: ${error.message}。您可以离线配置，后续手动输入。`;
+                status.classList.add('error');
+                status.classList.remove('success');
+                
+                // 离线模式下也保存配置
+                localStorage.setItem('apiUrl', apiUrl);
+                localStorage.setItem('apiConfigured', 'true');
+                document.getElementById('continueBtn').style.display = 'block';
+            }
+        }
+
+        function goToApp() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
