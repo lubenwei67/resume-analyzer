@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 赋能的智能简历分析系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📄 AI 智能简历分析系统</h1>
+            <p>快速解析简历，智能匹配岗位需求</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 标签导航 -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="upload">上传简历</button>
+                <button class="tab-btn" data-tab="match">简历匹配</button>
+                <button class="tab-btn" data-tab="extract">信息提取</button>
+                <button class="tab-btn" data-tab="list">简历列表</button>
+            </div>
+
+            <!-- 上传简历标签页 -->
+            <div id="upload" class="tab-content active">
+                <div class="card">
+                    <h2>上传简历</h2>
+                    <p>支持 PDF 格式，文件大小不超过 10MB</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>拖拽 PDF 文件到此处或点击选择</p>
+                        <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+                    </div>
+
+                    <div id="uploadStatus" class="status-message hidden"></div>
+
+                    <div id="uploadResult" class="result-box hidden">
+                        <h3>提取的简历信息</h3>
+                        
+                        <div class="info-section">
+                            <h4>基本信息</h4>
+                            <div id="baseInfo" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>其他信息</h4>
+                            <div id="optionalInfo" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>技能</h4>
+                            <div id="skills" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>关键词</h4>
+                            <div id="keywords" class="info-content"></div>
+                        </div>
+
+                        <p id="resumeIdInfo" class="resume-id"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 简历匹配标签页 -->
+            <div id="match" class="tab-content">
+                <div class="card">
+                    <h2>简历与岗位匹配</h2>
+                    
+                    <div class="form-group">
+                        <label for="resumeSelect">选择简历：</label>
+                        <select id="resumeSelect">
+                            <option value="">-- 选择简历 --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jobDescription">岗位描述：</label>
+                        <textarea id="jobDescription" 
+                                  placeholder="输入岗位描述，例如：我们需要一个 Python 后端开发工程师，需要 3 年以上工作经验，熟悉 Django/FastAPI，了解分布式系统..."
+                                  rows="6"></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="matchResume()">计算匹配度</button>
+
+                    <div id="matchStatus" class="status-message hidden"></div>
+
+                    <div id="matchResult" class="result-box hidden">
+                        <h3>匹配结果</h3>
+                        
+                        <div class="score-display">
+                            <div class="score-item">
+                                <div class="score-value" id="totalScore">--</div>
+                                <div class="score-label">综合评分</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="skillMatch">--</div>
+                                <div class="score-label">技能匹配</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="experienceMatch">--</div>
+                                <div class="score-label">经验匹配</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="textSimilarity">--</div>
+                                <div class="score-label">文本相似度</div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>匹配的技能</h4>
+                            <div id="matchedSkills" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>岗位关键词</h4>
+                            <div id="jobKeywords" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>推荐意见</h4>
+                            <p id="recommendation" class="recommendation"></p>
+                        </div>
+
+                        <p id="cacheInfo" class="cache-info"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 信息提取标签页 -->
+            <div id="extract" class="tab-content">
+                <div class="card">
+                    <h2>直接提取简历信息</h2>
+                    <p>粘贴简历文本，系统将自动提取关键信息</p>
+                    
+                    <div class="form-group">
+                        <label for="extractText">简历文本：</label>
+                        <textarea id="extractText" 
+                                  placeholder="粘贴或输入简历内容..."
+                                  rows="8"></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="extractInfo()">提取信息</button>
+
+                    <div id="extractStatus" class="status-message hidden"></div>
+
+                    <div id="extractResult" class="result-box hidden">
+                        <h3>提取的信息</h3>
+                        
+                        <div class="info-section">
+                            <h4>基本信息</h4>
+                            <div id="extractBaseInfo" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>其他信息</h4>
+                            <div id="extractOptionalInfo" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>技能</h4>
+                            <div id="extractSkills" class="info-content"></div>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>关键词</h4>
+                            <div id="extractKeywords" class="info-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 简历列表标签页 -->
+            <div id="list" class="tab-content">
+                <div class="card">
+                    <h2>已上传的简历</h2>
+                    
+                    <button class="btn btn-secondary" onclick="listResumes()">刷新列表</button>
+
+                    <div id="resumeList" class="resume-list hidden">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>简历 ID</th>
+                                    <th>文件名</th>
+                                    <th>候选人姓名</th>
+                                    <th>邮箱</th>
+                                    <th>上传时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listBody">
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyList" class="empty-state">
+                        <p>暂无简历，请先上传简历</p>
+                    </div>
+
+                    <button class="btn btn-danger" onclick="clearData()">清空所有数据</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 AI 智能简历分析系统 | API 服务状态: <span id="apiStatus">连接中...</span></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
