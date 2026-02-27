@@ -1,5 +1,5 @@
 // API 配置 - 从 localStorage 读取，或使用默认值
-let API_BASE_URL = localStorage.getItem('apiUrl') || 'http://localhost:5000/api';
+let API_BASE_URL = localStorage.getItem('apiUrl') || 'https://api-bidamvsiuc.cn-hangzhou.fcapp.run/api';
 
 // 当前选中的简历 ID
 let currentResumeId = null;
