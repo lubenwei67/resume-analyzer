@@ -22,6 +22,9 @@ CORS(app, resources={
     }
 })
 
+# 初始化缓存管理器（本地缓存，支持 Redis）
+cache_manager = CacheManager(use_redis=False, redis_config=None)
+
 # 内存存储
 sessions = {}
 max_sessions = 100
@@ -158,7 +161,7 @@ def upload_resume():
 
 @app.route('/api/match', methods=['POST'])
 def match_resume():
-    """匹配简历与岗位"""
+    """匹配简历与岗位（带缓存机制）"""
     data = request.get_json()
     
     if not data or 'session_id' not in data or 'job_description' not in data:
@@ -172,15 +175,41 @@ def match_resume():
     job_desc = data['job_description']
     
     try:
+        # 生成缓存键（基于简历文本 + 岗位描述）
+        cache_key = CacheManager.generate_key('match', {
+            'resume_text': session['resume_text'],
+            'job_description': job_desc
+        })
+        
+        # 尝试从缓存获取
+        cached_result = cache_manager.get(cache_key)
+        if cached_result:
+            # 处理缓存结果（可能是 dict 或 JSON 字符串）
+            if isinstance(cached_result, str):
+                cached_data = json.loads(cached_result)
+            else:
+                cached_data = cached_result
+            
+            return jsonify({
+                'success': True,
+                'data': cached_data,
+                'from_cache': True
+            }), 200
+        
+        # 缓存未命中，执行匹配
         match_result = ResumeMatcher.match_resume_to_job({
             'skills': session['extracted_info']['skills'],
             'resume_text': session['resume_text'],
             'optional_info': session['extracted_info']['optional_info']
         }, job_desc)
         
+        # 缓存结果（同时支持本地和 Redis 缓存）
+        cache_manager.set(cache_key, match_result)
+        
         return jsonify({
             'success': True,
-            'data': match_result
+            'data': match_result,
+            'from_cache': False
         }), 200
     
     except Exception as e:
@@ -189,15 +218,42 @@ def match_resume():
 
 @app.route('/api/extract', methods=['POST'])
 def extract_info():
-    """提取简历信息"""
+    """提取简历信息（带缓存机制）"""
     data = request.get_json()
     
     if not data or 'resume_text' not in data:
         return jsonify({'success': False, 'message': 'Missing resume_text'}), 400
     
     try:
+        # 生成缓存键
+        cache_key = CacheManager.generate_key('extract', {'resume_text': data['resume_text']})
+        
+        # 尝试从缓存获取
+        cached_result = cache_manager.get(cache_key)
+        if cached_result:
+            # 处理缓存结果（可能是 dict 或 JSON 字符串）
+            if isinstance(cached_result, str):
+                cached_data = json.loads(cached_result)
+            else:
+                cached_data = cached_result
+            
+            return jsonify({
+                'success': True,
+                'data': cached_data,
+                'from_cache': True
+            }), 200
+        
+        # 缓存未命中，执行提取
         extracted = HybridExtractor.extract_all_info(data['resume_text'])
-        return jsonify({'success': True, 'data': extracted}), 200
+        
+        # 缓存结果（同时支持本地和 Redis 缓存）
+        cache_manager.set(cache_key, extracted)
+        
+        return jsonify({
+            'success': True,
+            'data': extracted,
+            'from_cache': False
+        }), 200
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
