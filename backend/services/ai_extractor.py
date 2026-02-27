@@ -2,7 +2,7 @@
 AI 关键信息提取模块
 """
 import re
-from ..utils.text_cleaner import (
+from utils.text_cleaner import (
     is_valid_email, is_valid_phone, normalize_phone, 
     normalize_email, extract_keywords, clean_text
 )

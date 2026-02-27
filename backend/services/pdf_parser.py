@@ -3,7 +3,7 @@ PDF 解析模块
 """
 import os
 import pdfplumber
-from ..utils.text_cleaner import clean_text, extract_segments
+from utils.text_cleaner import clean_text, extract_segments
 
 
 class PDFParser:

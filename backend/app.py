@@ -13,7 +13,7 @@ from config import (
     REDIS_HOST, REDIS_PORT, REDIS_DB
 )
 from services.pdf_parser import PDFParser
-from services.ai_extractor import AIExtractor
+from services.ai_hybrid_extractor import HybridExtractor  # 使用混合提取器（优先LLM，备选正则）
 from services.resume_matcher import ResumeMatcher
 from services.cache import CacheManager
 
@@ -110,9 +110,9 @@ def upload_resume():
                 'error': parse_result['error']
             }), 500
         
-        # 提取关键信息
+        # 提取关键信息（使用混合提取器：优先LLM，失败时回退）
         resume_text = parse_result['data']['raw_text']
-        extracted_info = AIExtractor.extract_all_info(resume_text)
+        extracted_info = HybridExtractor.extract_all_info(resume_text)
         
         # 生成简历 ID
         resume_id = f"resume_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -274,8 +274,8 @@ def extract_info():
         
         resume_text = data['resume_text']
         
-        # 提取信息
-        extracted_info = AIExtractor.extract_all_info(resume_text)
+        # 提取信息（使用混合提取器）
+        extracted_info = HybridExtractor.extract_all_info(resume_text)
         
         return jsonify({
             'success': True,
