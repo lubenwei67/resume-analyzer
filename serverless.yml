@@ -1,0 +1,31 @@
+service: resume-analyzer
+
+provider:
+  name: aliyun
+  runtime: python3.9
+  region: cn-beijing
+  memorySize: 512
+  timeout: 60
+  environment:
+    ALIYUN_QWEN_API_KEY: sk-fa9248d9096f44d385501939bdc99c6b
+    FLASK_ENV: production
+    DEBUG: "False"
+
+functions:
+  api:
+    handler: app.handler
+    description: AI-Powered Resume Analysis API
+    events:
+      - http:
+          path: /api
+          method: ANY
+
+package:
+  artifact: resume-analyzer.zip
+  exclude:
+    - .git/**
+    - .venv/**
+    - __pycache__/**
+    - *.egg-info/**
+    - node_modules/**
+    - .pytest_cache/**
