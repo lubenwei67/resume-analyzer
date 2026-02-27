@@ -16,7 +16,7 @@ class HybridExtractor:
     # 导入 LLM 提取器
     llm_available = False
     try:
-        from ai_llm_extractor import LLMExtractor
+        from services.ai_llm_extractor import LLMExtractor
         llm_available = True
     except Exception as e:
         print(f"[HybridExtractor] LLM 模块加载失败，将使用备选方案: {e}")
@@ -34,7 +34,7 @@ class HybridExtractor:
         # 首先尝试 LLM 提取
         if HybridExtractor.llm_available:
             try:
-                from ai_llm_extractor import LLMExtractor
+                from services.ai_llm_extractor import LLMExtractor
                 llm_result = LLMExtractor.extract_base_info_with_llm(resume_text)
                 if llm_result.get('phone') or llm_result.get('email'):
                     return llm_result
@@ -95,7 +95,7 @@ class HybridExtractor:
         # 首先尝试 LLM 提取
         if HybridExtractor.llm_available:
             try:
-                from ai_llm_extractor import LLMExtractor
+                from services.ai_llm_extractor import LLMExtractor
                 llm_result = LLMExtractor.extract_optional_info_with_llm(resume_text)
                 if llm_result.get('job_intention') or llm_result.get('work_experience_years'):
                     return llm_result
